@@ -1,5 +1,10 @@
 {-# LANGUAGE RankNTypes #-}
-module Language.Synthesis.Distribution where
+module Language.Synthesis.Distribution (
+    Distr (Distr), sample, logProbability, negativeInfinity, sumByLogs,
+    categorical, uniform, randInt, replicate, mix
+) where
+
+import Prelude hiding (replicate)
 
 import           Control.Monad        (join, replicateM)
 import           Control.Monad.Random (RandomGen, Rand, getRandom, getRandomR)

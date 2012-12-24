@@ -1,53 +1,58 @@
+module Language.Synthesis.Synthesis (
+    Mutation (MutateOpcode, SwapOpcodes), Settings (Settings),
+    numOpcodes, opcodeDistr, mutationWeights, priorDistr, jumpDistr
+) where
 
-import Control.Monad
-import Control.Monad.Random
-import Control.Monad.Random.Class
+import           Control.Monad
+import           Control.Monad.Random
+import           Control.Monad.Random.Class
+
+import           Language.Synthesis.Distribution (Distr (Distr))
+import qualified Language.Synthesis.Distribution as Distr
 
 
-data Mutation = MutateOpcode | SwapOpcodes 
+data Mutation = MutateOpcode | SwapOpcodes
 
 
-data Settings = Settings {
-    numOpcodes :: Int,
-    opcodeWeights :: (OpCode, Double)
-    mutationWeights :: (Mutation, Double)
+data Settings a = Settings {
+    numOpcodes      :: Int,
+    opcodeDistr     :: Distr a,
+    mutationWeights :: [(Mutation, Double)]
 }
 
-opcodeDistr :: Settings -> Distr OpCode
-opcodeDistr = Distr.categorical . opcodeWeights
-
-priorDistr :: Settings -> Distr [OpCode]
+priorDistr :: Settings a -> Distr [a]
 priorDistr settings = Distr.replicate (numOpcodes settings) (opcodeDistr settings)
 
-splitAt :: Int -> [a] -> ([a], a, [a])
-splitAt i xs = (take i xs, xs !! i, drop (i+1) xs)
+splitSelectingAt :: Int -> [a] -> ([a], a, [a])
+splitSelectingAt i xs = (take i xs, xs !! i, drop (i+1) xs)
 
-mutateOpcodeAt :: Settings -> Int -> [OpCode] -> Distr [OpCode]
-mutateOpcodeAt settings i codes = Distr samp logProbability
-    where (before, elem, after) = splitAt i codes
-          samp = do
-              elem' <- opcodeDistr settings
+mutateOpcodeAt :: Eq a => Settings a -> Int -> [a] -> Distr [a]
+mutateOpcodeAt settings i codes = Distr (samp ()) logProb
+    where (before, elem, after) = splitSelectingAt i codes
+          -- samp (), to get around the monomorphism restriction
+          samp () = do
+              elem' <- Distr.sample (opcodeDistr settings)
               return (before ++ [elem] ++ after)
-          logProbability other = do
-              let (before', elem', after') = splitAt i other
+          logProb other =
+              let (before', elem', after') = splitSelectingAt i other in
               if (before', after') == (before, after)
-                  then logProbability (opcodeDistr settings) elem'
-                  else negativeInfinity
+                  then Distr.logProbability (opcodeDistr settings) elem'
+                  else Distr.negativeInfinity
 
 replaceAt :: Int -> a -> [a] -> [a]
 replaceAt i x xs = before ++ [x] ++ after
-    where (before, _, after) = splitAt i xs
+    where (before, _, after) = splitSelectingAt i xs
 
 swapAt :: Int -> Int -> [a] -> [a]
 swapAt i j xs = replaceAt i (xs !! j) $ replaceAt j (xs !! i) xs
 
-mutate :: Settings -> Mutation -> [OpCode] -> Distr [OpCode]
-mutate settings MutateOpcode codes = 
+mutate :: Eq a => Settings a -> Mutation -> [a] -> Distr [a]
+mutate settings MutateOpcode codes =
     Distr.mix [(mutateOpcodeAt settings i codes, 1.0) | i <- [0 .. length codes - 1]]
-mutate settings SwapOpcodes codes = 
+mutate settings SwapOpcodes codes =
     Distr.uniform [swapAt i j codes | i <- [1 .. length codes - 1], j <- [0 .. i - 1]]
 
-jumpDistr :: Settings -> [OpCode] -> Distr [OpCode]
-jumpDistr settings orig = 
-    Distr.mix [(mutate m orig, weight) | (m, weight) <- mutationWeights settings]
+jumpDistr :: Eq a => Settings a -> [a] -> Distr [a]
+jumpDistr settings orig =
+    Distr.mix [(mutate settings m orig, weight) | (m, weight) <- mutationWeights settings]
 
