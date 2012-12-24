@@ -1,5 +1,5 @@
 {-# LANGUAGE RankNTypes #-}
-module Language.Synthesis.Distr where
+module Language.Synthesis.Distribution where
 
 import           Control.Monad        (join, replicateM)
 import           Control.Monad.Random (RandomGen, Rand, getRandom, getRandomR)
