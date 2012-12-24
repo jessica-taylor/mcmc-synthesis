@@ -1,7 +1,12 @@
 
+module Language.Synthesis.MCMC where
+
 import Control.Monad
 import Control.Monad.Random
 import Control.Monad.Random.Class
+
+import Language.Synthesis.Distribution (Distr)
+import qualified Language.Synthesis.Distribution as Distr
 
 
 
@@ -10,12 +15,12 @@ import Control.Monad.Random.Class
 mhNext :: RandomGen g => (a, Double) -> (a -> Double) -> (a -> Distr a) -> 
           Rand g (a, Double)
 mhNext (orig, origDensity) density jump = do
-    next <- sample (jump orig)
-    let origToNext = logProbability (jump orig) next
-        nextToOrig = logProbability (jump next) orig
+    next <- Distr.sample (jump orig)
+    let origToNext = Distr.logProbability (jump orig) next
+        nextToOrig = Distr.logProbability (jump next) orig
         nextDensity = density next
         score = nextDensity - origDensity + nextToOrig - origToNext
-    acceptance :: Double <- getRandom
+    acceptance <- getRandom
     return $ if score >= log acceptance 
                 then (next, nextDensity)
                 else (orig, origDensity)
