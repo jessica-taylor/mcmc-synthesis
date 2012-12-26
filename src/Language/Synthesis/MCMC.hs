@@ -9,7 +9,8 @@ import           Language.Synthesis.Distribution (Distr)
 import qualified Language.Synthesis.Distribution as Distr
 
 
-
+-- These functions work on triples, (value, aux, density).
+-- Density functions take a value and return auxilary and density.
 
 
 mhNext :: RandomGen g => (a, b, Double) -> (a -> (b, Double)) -> 
@@ -32,8 +33,12 @@ mhList' orig density jump g = orig : mhList' next density jump g'
     where (next, g') = runRand (mhNext orig density jump) g
 
 
-mhList :: RandomGen g => a -> (a -> (b, Double)) -> (a -> Distr a) ->
-          Rand g [(a, b, Double)]
+-- |Use the Metropolis-Hastings algorithm to sample a list of values.
+mhList :: RandomGen g => 
+          a                          -- ^The initial value.
+          -> (a -> (b, Double))      -- ^Density function.
+          -> (a -> Distr a)          -- ^Jumping distribution.
+          -> Rand g [(a, b, Double)] -- ^List of (value, aux, density).
 mhList orig density jump =
     liftM (mhList' (orig, origAux, origDensity) density jump) getSplit
     where (origAux, origDensity) = density orig
