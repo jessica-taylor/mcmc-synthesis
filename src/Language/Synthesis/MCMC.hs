@@ -35,4 +35,5 @@ mhList' orig density jump g = orig : mhList' next density jump g'
 mhList :: RandomGen g => a -> (a -> (b, Double)) -> (a -> Distr a) ->
           Rand g [(a, b, Double)]
 mhList orig density jump =
-    liftM (mhList' (orig, density orig) density jump) getSplit
+    liftM (mhList' (orig, origAux, origDensity) density jump) getSplit
+    where (origAux, origDensity) = density orig
