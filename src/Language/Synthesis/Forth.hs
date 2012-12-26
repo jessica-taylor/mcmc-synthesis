@@ -21,9 +21,9 @@ data Problem = Problem {
 settings :: Int -> Settings Instruction
 settings numCodes = Settings { 
     numOpcodes = numCodes,
-    opcodeDistr = 
-    mutationWeights = [(1.0, mutateOpcode),
-                       (1.0, swapOpcodes)]
+    instructionDistr = 
+    mutationWeights = [(1.0, mutateInstruction),
+                       (1.0, swapInstructions)]
 }
 
 runProgram :: [Instruction] -> ForthData -> ForthData
