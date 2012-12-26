@@ -1,7 +1,5 @@
 module Language.Synthesis.Synthesis (
-    Mutation, Settings (Settings),
-    numInstructions, instructionDistr, mutationWeights,
-    priorDistr, mutationDistr, mutateInstruction, swapInstructions
+    Mutation, synthesizeMhList, runningBest
 ) where
 
 import           Control.Monad
