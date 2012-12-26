@@ -10,52 +10,22 @@ import           Control.Monad.Random.Class
 
 import           Language.Synthesis.Distribution (Distr (Distr))
 import qualified Language.Synthesis.Distribution as Distr
+import           Language.Synthesis.MCMC
 
 
-type Mutation a = Settings a -> [a] -> Distr [a]
+type Mutation a = a -> Distr a
+
+synthesizeMhList :: Randomgen g => Distr a -> (a -> Double) -> Mutation -> Rand g [(a, Double)]
+synthesizeMhList prior score jump = do
+    first <- Distr.sample prior
+    let density prog = (sc, sc + logProbability prior prog)
+            where sc = score prog
+    list <- mhList first density jump
+    return [(prog, sc) | (prog, sc, _) <- list]
+
+runningBest :: [(a, Double)] -> [(a, Double)]
+runningBest (first:rest) = scanl first maxScore rest
+    where maxScore (p, ps) (q, qs) | qs >= ps = (q, qs)
+                                   | otherwise = (p, ps)
 
 
-data Settings a = Settings {
-    numInstructions  :: Int,
-    instructionDistr :: Distr a,
-    mutationWeights  :: [(Mutation a, Double)]
-}
-
-priorDistr :: Settings a -> Distr [a]
-priorDistr settings = Distr.replicate (numInstructions settings) (instructionDistr settings)
-
-mutationDistr :: Settings a -> [a] -> Distr [a]
-mutationDistr settings orig =
-    Distr.mix [(m settings orig, weight) | (m, weight) <- mutationWeights settings]
-
-splitSelectingAt :: Int -> [a] -> ([a], a, [a])
-splitSelectingAt i xs = (take i xs, xs !! i, drop (i+1) xs)
-
-mutateInstructionAt :: Eq a => Settings a -> Int -> [a] -> Distr [a]
-mutateInstructionAt settings i codes = Distr (samp ()) logProb
-    where (before, elem, after) = splitSelectingAt i codes
-          -- samp (), to get around the monomorphism restriction
-          samp () = do
-              elem' <- Distr.sample (instructionDistr settings)
-              return (before ++ [elem] ++ after)
-          logProb other =
-              let (before', elem', after') = splitSelectingAt i other in
-              if (before', after') == (before, after)
-                  then Distr.logProbability (instructionDistr settings) elem'
-                  else Distr.negativeInfinity
-
-mutateInstruction :: Eq a => Mutation a
-mutateInstruction settings codes =
-    Distr.mix [(mutateInstructionAt settings i codes, 1.0) | i <- [0 .. length codes - 1]]
-
-replaceAt :: Int -> a -> [a] -> [a]
-replaceAt i x xs = before ++ [x] ++ after
-    where (before, _, after) = splitSelectingAt i xs
-
-swapAt :: Int -> Int -> [a] -> [a]
-swapAt i j xs = replaceAt i (xs !! j) $ replaceAt j (xs !! i) xs
-
-
-swapInstructions :: Eq a => Mutation a
-swapInstructions settings codes =
-    Distr.uniform [swapAt i j codes | i <- [1 .. length codes - 1], j <- [0 .. i - 1]]
