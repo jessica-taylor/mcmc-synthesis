@@ -4,10 +4,11 @@ module Language.Synthesis.Distribution (
     categorical, uniform, randInt, replicate, mix
 ) where
 
-import Prelude hiding (replicate)
+import           Prelude              hiding (replicate)
 
 import           Control.Monad        (replicateM)
-import           Control.Monad.Random (RandomGen, Rand, getRandom, getRandomR)
+import           Control.Monad.Random (Rand, Random, RandomGen, getRandom,
+                                       getRandomR)
 
 -- |Represents a discrete probability distribution.
 data Distr a = Distr {
@@ -49,11 +50,12 @@ categorical items = Distr (sampleCategorical items) logProb
 uniform :: Eq a => [a] -> Distr a
 uniform xs = categorical [(x, 1.0) | x <- xs]
 
--- |A distribution over integers inclusively between the 2 values.
-randInt :: (Int, Int) -> Distr Int
+-- |A distribution over some integral type, inclusively between the 2
+-- values.
+randInt :: (Integral i, Random i) => (i, i) -> Distr i
 randInt range@(low, high) = Distr (getRandomR range) logProb
     where logProb item = if low <= item && item <= high
-                            then -log (fromIntegral (high - low + 1))
+                            then -log (fromIntegral $ high - low + 1)
                             else negativeInfinity
 
 -- |Generate n independent draws from a distribution.
@@ -65,4 +67,4 @@ replicate n orig = Distr (replicateM n $ sample orig) logProb
 mix :: [(Distr a, Double)] -> Distr a
 mix distrs = Distr (sampleCategorical distrs >>= sample) logProb
     where logProb x = sumByLogs [log prob + logProbability distr x |
-                                 (distr, prob) <- distrs] 
+                                 (distr, prob) <- distrs]
