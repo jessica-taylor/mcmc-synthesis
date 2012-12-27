@@ -6,7 +6,7 @@ module Language.Synthesis.Distribution (
 
 import Prelude hiding (replicate)
 
-import           Control.Monad        (join, replicateM)
+import           Control.Monad        (replicateM)
 import           Control.Monad.Random (RandomGen, Rand, getRandom, getRandomR)
 
 -- |Represents a discrete probability distribution.
@@ -29,7 +29,8 @@ sumByLogs xs = log (sum [exp (x - high) | x <- xs]) + high
 -- |Samples from an (item, weight) list.
 sampleCategorical :: RandomGen g => [(a, Double)] -> Rand g a
 sampleCategorical items = go items . sum $ map snd items
-  where go [(x, _)] _ = return x
+  where go [] _ = error "Cannot sample from an empty list."
+        go [(x, _)] _ = return x
         go ((x, weight):rest) total = do
           acceptance <- getRandom
           if weight/total >= acceptance

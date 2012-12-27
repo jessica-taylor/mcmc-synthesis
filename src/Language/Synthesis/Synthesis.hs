@@ -2,11 +2,10 @@ module Language.Synthesis.Synthesis (
     Mutation, synthesizeMhList, runningBest
 ) where
 
-import           Control.Monad
 import           Control.Monad.Random
-import           Control.Monad.Random.Class
+import           Control.Monad.Random.Class      ()
 
-import           Language.Synthesis.Distribution (Distr (Distr))
+import           Language.Synthesis.Distribution (Distr)
 import qualified Language.Synthesis.Distribution as Distr
 import           Language.Synthesis.MCMC
 
@@ -27,6 +26,7 @@ synthesizeMhList prior score jump = do
 
 -- |Given (value, score) pairs, return a running list of the best pair so far.
 runningBest :: [(a, Double)] -> [(a, Double)]
+runningBest []           = []
 runningBest (first:rest) = scanl maxScore first rest
     where maxScore (p, ps) (q, qs) | qs >= ps = (q, qs)
                                    | otherwise = (p, ps)
