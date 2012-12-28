@@ -4,7 +4,7 @@ module Language.Synthesis.Synthesis (
 ) where
 
 import           Control.Monad.Random
-import           Control.Monad.Random.Class      ()
+import           Control.Monad.Random.Class
 
 import           Language.Synthesis.Distribution (Distr)
 import qualified Language.Synthesis.Distribution as Distr
@@ -13,9 +13,7 @@ import           Language.Synthesis.MCMC
 -- | This type specifies which program to synthesize. It comes with a
 -- specification, which is a program that already works, some inputs
 -- and a distance function.
-data Problem program state = Problem { spec   :: program
-                                     , inputs :: [state]
-                                     , score  :: program -> Double
+data Problem program state = Problem { score  :: program -> Double
                                      , prior  :: Distr program
                                      , jump   :: Mutation program
                                      }
@@ -39,5 +37,3 @@ runningBest []           = []
 runningBest (first:rest) = scanl maxScore first rest
     where maxScore (p, ps) (q, qs) | qs >= ps = (q, qs)
                                    | otherwise = (p, ps)
-
-
