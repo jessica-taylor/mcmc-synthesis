@@ -4,22 +4,19 @@ module Language.Synthesis.Synthesis (
 ) where
 
 import           Control.Monad.Random
-import           Control.Monad.Random.Class
 
 import           Language.Synthesis.Distribution (Distr)
 import qualified Language.Synthesis.Distribution as Distr
 import           Language.Synthesis.MCMC
+import           Language.Synthesis.Mutations    (Mutation)
 
 -- | This type specifies which program to synthesize. It comes with a
 -- specification, which is a program that already works, some inputs
 -- and a distance function.
-data Problem program state = Problem { score  :: program -> Double
-                                     , prior  :: Distr program
-                                     , jump   :: Mutation program
+data Problem program state = Problem { score :: program -> Double
+                                     , prior :: Distr program
+                                     , jump  :: Mutation program
                                      }
-
--- |A mutation for the program type, a.
-type Mutation a = a -> Distr a
 
 -- |Given a prior distribution, score function, mutation distribution, generate
 -- a list of (program, score) values through MH sampling.

@@ -1,8 +1,8 @@
-
 module Language.Synthesis.MCMC (mhList) where
 
 import           Control.Monad
-import           Control.Monad.Random
+import           Control.Monad.Random            (Rand, RandomGen, getRandom,
+                                                  getSplit, runRand)
 import           Control.Monad.Random.Class      ()
 
 import           Language.Synthesis.Distribution (Distr)

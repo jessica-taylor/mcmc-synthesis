@@ -1,26 +1,22 @@
 module Language.Synthesis.Mutations (
-    mutateInstruction, swapInstructions, mix
+    mutateInstruction, swapInstructions, mix, Mutation
 ) where
-
-import           Control.Monad
-import           Control.Monad.Random
-import           Control.Monad.Random.Class
 
 import           Language.Synthesis.Distribution (Distr (Distr))
 import qualified Language.Synthesis.Distribution as Distr
-import           Language.Synthesis.Synthesis    (Mutation)
 
+type Mutation a = a -> Distr a
 
 splitSelectingAt :: Int -> [a] -> ([a], a, [a])
 splitSelectingAt i xs = (take i xs, xs !! i, drop (i+1) xs)
 
 mutateInstructionAt :: Eq a => Distr a -> Int -> [a] -> Distr [a]
 mutateInstructionAt instrDistr i codes = Distr (samp ()) logProb
-    where (before, elem, after) = splitSelectingAt i codes
+    where (before, _, after) = splitSelectingAt i codes
           -- samp (), to get around the monomorphism restriction
           samp () = do
               elem' <- Distr.sample instrDistr
-              return (before ++ [elem] ++ after)
+              return (before ++ [elem'] ++ after)
           logProb other =
               let (before', elem', after') = splitSelectingAt i other in
               if (before', after') == (before, after)
