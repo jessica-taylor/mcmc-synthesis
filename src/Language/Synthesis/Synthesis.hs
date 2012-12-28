@@ -13,14 +13,14 @@ import           Language.Synthesis.Mutations    (Mutation)
 -- | This type specifies which program to synthesize. It comes with a
 -- specification, which is a program that already works, some inputs
 -- and a distance function.
-data Problem program state = Problem { score :: program -> Double
-                                     , prior :: Distr program
-                                     , jump  :: Mutation program
-                                     }
+data Problem program = Problem { score :: program -> Double
+                               , prior :: Distr program
+                               , jump  :: Mutation program
+                               }
 
 -- |Given a prior distribution, score function, mutation distribution, generate
 -- a list of (program, score) values through MH sampling.
-synthesizeMhList :: RandomGen gen => Problem program state -> Rand gen [(program, Double)]
+synthesizeMhList :: RandomGen gen => Problem program -> Rand gen [(program, Double)]
 synthesizeMhList Problem {prior, score, jump} = do
     first <- Distr.sample prior
     let density prog = (sc, sc + Distr.logProbability prior prog)
