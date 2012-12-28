@@ -32,12 +32,17 @@ synthesizeMhList Problem {prior, score, jump} = do
 scanl' :: (a -> b -> a) -> a -> [b] -> [a]
 scanl' f q xs = q : (case xs of
                         [] -> []
-                        first:rest -> next `seq` scanl f next xs
+                        first:rest -> next `seq` scanl f next rest
                             where next = f q first)
 
 -- |Given (value, score) pairs, return a running list of the best pair so far.
-runningBest :: [(a, Double)] -> [(a, Double)]
 runningBest []           = []
 runningBest (first:rest) = scanl' maxScore first rest
     where maxScore (p, ps) (q, qs) | qs >= ps = (q, qs)
                                    | otherwise = (p, ps)
+
+-- runningBest :: [(a, Double)] -> [(a, Double)]
+-- runningBest [] = []
+-- runningBest [only] = [only]
+-- runningBest ((p,ps):(q,qs):rest) | qs >= ps = (p, ps) : runningBest ((q,qs):rest)
+--                                  | otherwise = (p, ps) : runningBest ((p,ps):rest)
