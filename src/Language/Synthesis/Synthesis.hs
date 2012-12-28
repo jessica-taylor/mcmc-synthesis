@@ -28,9 +28,16 @@ synthesizeMhList Problem {prior, score, jump} = do
     list <- mhList first density jump
     return [(prog, sc) | (prog, sc, _) <- list]
 
+
+scanl' :: (a -> b -> a) -> a -> [b] -> [a]
+scanl' f q xs = q : (case xs of
+                        [] -> []
+                        first:rest -> next `seq` scanl f next xs
+                            where next = f q first)
+
 -- |Given (value, score) pairs, return a running list of the best pair so far.
 runningBest :: [(a, Double)] -> [(a, Double)]
 runningBest []           = []
-runningBest (first:rest) = scanl maxScore first rest
+runningBest (first:rest) = scanl' maxScore first rest
     where maxScore (p, ps) (q, qs) | qs >= ps = (q, qs)
                                    | otherwise = (p, ps)
