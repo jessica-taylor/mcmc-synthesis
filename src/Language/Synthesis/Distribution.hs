@@ -1,7 +1,7 @@
 {-# LANGUAGE RankNTypes #-}
 module Language.Synthesis.Distribution (
     Distr (Distr), sample, logProbability, negativeInfinity, sumByLogs,
-    categorical, uniform, randInt, replicate, mix
+    categorical, uniform, randInt, replicate, mix, constant
 ) where
 
 import           Prelude              hiding (replicate)
@@ -21,6 +21,12 @@ data Distr a = Distr {
 -- |Negative infinity, the log of 0 probability.
 negativeInfinity :: Double
 negativeInfinity = read "-Infinity"
+
+
+-- |A distribution containing a single item.
+constant :: a -> Distr a
+constant item = Distr { sample = return item
+                      , logProbability = const 0 }
 
 -- |Computes (log . sum . map exp), with more numeric precision.
 sumByLogs :: [Double] -> Double
