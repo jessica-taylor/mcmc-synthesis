@@ -10,7 +10,7 @@ name:                mcmc-synthesis
 -- PVP summary:      +-+------- breaking API changes
 --                   | | +----- non-breaking API additions
 --                   | | | +--- code changes with no API change
-version:             0.1.0.4
+version:             0.1.0.5
 
 -- A short (one-line) description of the package.
 synopsis:            MCMC applied to probabilistic program synthesis
@@ -25,7 +25,7 @@ license:             GPL-3
 license-file:        LICENSE
 
 -- The package author(s).
-author:              Jacob Taylor
+author:              Jacob Taylor, Tikhon Jelvis
 
 -- An email address to which users can send suggestions, bug reports, and 
 -- patches.
@@ -43,10 +43,10 @@ cabal-version:       >=1.8
 
 
 library
-  build-depends:       base ==4.5.*, MonadRandom ==0.1.*
+  build-depends:       base >3 && <=5, MonadRandom ==0.1.*
   hs-source-dirs:      src
-  exposed-modules:     Language.Synthesis.Distribution, Language.Synthesis.MCMC,
-                       Language.Synthesis.Synthesis, Language.Synthesis.Mutations
-  GHC-options:         -Wall -O2
-
-  
+  exposed-modules:     Language.Synthesis.Distribution,
+                       Language.Synthesis.MCMC,
+                       Language.Synthesis.Mutations,
+                       Language.Synthesis.Synthesis
+  GHC-options:         -Wall
