@@ -22,7 +22,6 @@ data Distr a = Distr {
 negativeInfinity :: Double
 negativeInfinity = read "-Infinity"
 
-
 -- |A distribution containing a single item.
 constant :: a -> Distr a
 constant item = Distr { sample = return item
