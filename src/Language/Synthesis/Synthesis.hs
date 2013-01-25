@@ -1,6 +1,6 @@
 {-# LANGUAGE NamedFieldPuns #-}
 module Language.Synthesis.Synthesis (
-    Score, Mutation, synthesizeMhList, runningBest, Problem(..)
+    Score (..), Mutation, synthesizeMhList, runningBest, Problem(..)
 ) where
 
 import           Control.Monad.Random            (Rand, RandomGen)
