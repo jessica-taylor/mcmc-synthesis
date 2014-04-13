@@ -1,6 +1,10 @@
+{-# LANGUAGE RankNTypes, ScopedTypeVariables #-}
 module Language.Synthesis.Mutations (
-    mutateInstruction, swapInstructions, mix, Mutation
+    mutateInstruction, mutateInstructionAt, mutateInstructionsAt, swapInstructions, mix, Mutation
 ) where
+
+import           Control.Monad                   (foldM)
+import           Control.Monad.Random            (Rand)
 
 import           Language.Synthesis.Distribution (Distr (Distr))
 import qualified Language.Synthesis.Distribution as Distr
@@ -22,6 +26,24 @@ mutateInstructionAt instrDistr i codes = Distr (samp ()) logProb
               if (before', after') == (before, after)
                   then Distr.logProbability instrDistr elem'
                   else Distr.negativeInfinity
+
+dropAt :: [Int] -> [a] -> [a]
+dropAt positions = map snd . filter ((`elem` positions) . fst) . zip [0..]
+
+takeAt :: [Int] -> [a] -> [a]
+takeAt positions = map snd . filter ((`notElem` positions) . fst) . zip [0..]
+
+mutateInstructionsAt :: Eq a => Distr a -> [Int] -> [a] -> Distr [a]
+mutateInstructionsAt instrDistr positions program = Distr (samp ()) logProb
+    where instrs = Distr.replicate (length positions) instrDistr
+          samp () = do
+            elems <- Distr.sample instrs
+            return $ foldr (uncurry replaceAt) program (zip positions elems)   
+          logProb other =
+            if dropAt positions other == dropAt positions program
+                  then Distr.logProbability instrs $ takeAt positions other
+                  else Distr.negativeInfinity
+
 
 -- |Given a distribution over instructions, mutates a random instruction.
 mutateInstruction :: Eq a => Distr a -> Mutation [a]
